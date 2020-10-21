@@ -85,7 +85,7 @@ defmodule DockerAPI.Image do
 
   def push!(image = %Image{}, params \\ []) when is_list(params) do
     conn = add_header(image.connection, "X-Registry-Auth", image.connection.identity_token)
-    Connection.post!(image.connection, path_for(image, :push), params)
+    Connection.post!(conn, path_for(image, :push), params)
   end
 
   def tag(image = %Image{}, params \\ []) when is_list(params) do
