@@ -58,14 +58,14 @@ defmodule DockerAPI.Connection do
     |> handle_response!()
   end
 
-  def delete(conn = %Connection{}, path, params) do
+  def delete(conn = %Connection{}, path, params \\ []) do
     url = build_url(conn, path)
 
     HTTPoison.delete(url, conn.headers, Keyword.merge(conn.options, params: params))
     |> handle_response()
   end
 
-  def delete!(conn = %Connection{}, path, params) do
+  def delete!(conn = %Connection{}, path, params \\ []) do
     delete(conn, path, params)
     |> handle_response!()
   end
