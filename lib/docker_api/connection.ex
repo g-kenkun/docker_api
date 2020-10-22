@@ -3,7 +3,7 @@ defmodule DockerAPI.Connection do
 
   alias DockerAPI.{Connection, Error}
 
-  defstruct url: "", headers: [], options: [], identity_token: ""
+  defstruct url: nil, headers: [], options: [], identity_token: nil
 
   def new(url \\ "http+unix://%2Fvar%2Frun%2Fdocker.sock", headers \\ [], options \\ [])
       when is_binary(url) and is_list(headers) and is_list(options) do
