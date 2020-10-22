@@ -32,7 +32,7 @@ defmodule DockerAPI.Network do
     Connection.delete(network.connection, path_for(network))
   end
 
-  def remove(network = %Network{}) do
+  def remove!(network = %Network{}) do
     Connection.delete!(network.connection, path_for(network))
   end
 

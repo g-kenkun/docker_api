@@ -10,7 +10,8 @@ defmodule DockerAPI.Plugin do
   def list(conn = %Connection{}, params \\ []) when is_list(params) do
     case Connection.get(conn, path_for(), params) do
       {:ok, json} ->
-        {:ok, Enum.map(&new(&1, conn))}
+        {:ok, Enum.map(json, &new(&1, conn))}
+
       {:error, error} ->
         {:error, error}
     end
@@ -29,13 +30,15 @@ defmodule DockerAPI.Plugin do
     Connection.get!(conn, path_for(), params)
   end
 
-  def install(conn = %Connection{}, params \\ [], body \\ []) when is_list(params) and is_list(body) do
+  def install(conn = %Connection{}, params \\ [], body \\ [])
+      when is_list(params) and is_list(body) do
     conn
     |> add_header("X-Registry-Auth", conn.identity_token)
     |> Connection.post(path_for("pull"), params, body)
   end
 
-  def install!(conn = %Connection{}, params \\ [], body \\ []) when is_list(params) and is_list(body) do
+  def install!(conn = %Connection{}, params \\ [], body \\ [])
+      when is_list(params) and is_list(body) do
     conn
     |> add_header("X-Registry-Auth", conn.identity_token)
     |> Connection.post!(path_for("pull"), params, body)
@@ -73,11 +76,13 @@ defmodule DockerAPI.Plugin do
     Connection.post!(plugin.connection, path_for(plugin, "disable"))
   end
 
-  def upgrade(plugin = %Plugin{}, params \\ [], body \\ []) when is_list(params) and is_list(body) do
+  def upgrade(plugin = %Plugin{}, params \\ [], body \\ [])
+      when is_list(params) and is_list(body) do
     Connection.post(plugin.connection, path_for(plugin, "upgrade"), params, body)
   end
 
-  def upgrade!(plugin = %Plugin{}, params \\ [], body \\ []) when is_list(params) and is_list(body) do
+  def upgrade!(plugin = %Plugin{}, params \\ [], body \\ [])
+      when is_list(params) and is_list(body) do
     Connection.post!(plugin.connection, path_for(plugin, "upgrade"), params, body)
   end
 
@@ -116,7 +121,7 @@ defmodule DockerAPI.Plugin do
     "/plugins"
   end
 
-  defp path_for(path) when is_string(path) do
+  defp path_for(path) when is_binary(path) do
     "/plugins/#{path}"
   end
 
