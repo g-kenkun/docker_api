@@ -5,7 +5,7 @@ defmodule DockerAPI.Task do
 
   defstruct id: nil, connection: nil
 
-  def list(conn = %Connection{}, params \\ []) when is_list(params) do
+  def list(conn, params \\ []) do
     case Connection.get(conn, path_for(), params) do
       {:ok, json} ->
         {:ok, Enum.map(json, &new(&1, conn))}
@@ -15,7 +15,7 @@ defmodule DockerAPI.Task do
     end
   end
 
-  def list!(conn = %Connection{}, params \\ []) when is_list(params) do
+  def list!(conn, params \\ []) do
     case Connection.get!(conn, path_for(), params) do
       {:ok, json} ->
         {:ok, Enum.map(json, &new(&1, conn))}
@@ -25,15 +25,19 @@ defmodule DockerAPI.Task do
     end
   end
 
-  def inspect(task = %Task{}) do
+  def inspect(task) do
     Connection.get(task.connection, path_for(task))
   end
 
-  def inspect!(task = %Task{}) do
+  def inspect!(task) do
     Connection.get!(task.connection, path_for(task))
   end
 
-  def logs(_tasks = %Task{}, params \\ []) when is_list(params) do
+  def logs(_tasks, _params \\ []) do
+    :none
+  end
+
+  def logs!(_tasks, _params \\ []) do
     :none
   end
 
@@ -48,11 +52,7 @@ defmodule DockerAPI.Task do
     "/tasks"
   end
 
-  defp path_for(task = %Task{}) do
+  defp path_for(task) do
     "/tasks/#{task.id}"
   end
-
-  #  defp path_for(task = %Task{}, path) do
-  #    "/tasks/#{task.id}/#{path}"
-  #  end
 end

@@ -5,7 +5,7 @@ defmodule DockerAPI.Config do
 
   defstruct id: nil, connection: nil
 
-  def list(conn = %Connection{}, params \\ []) when is_list(params) do
+  def list(conn, params \\ []) do
     case Connection.get(conn, path_for(), params) do
       {:ok, json} ->
         {:ok, Enum.map(json, &new(&1, conn))}
@@ -15,13 +15,13 @@ defmodule DockerAPI.Config do
     end
   end
 
-  def list!(conn = %Connection{}, params \\ []) when is_list(params) do
+  def list!(conn, params \\ []) do
     Connection.get(conn, path_for(), params)
     |> Enum.map(&new(&1, conn))
   end
 
-  def create(conn = %Connection{}, body \\ %{}) when is_map(body) do
-    case Connection.post(conn, path_for("create"), [], body) do
+  def create(conn, body \\ %{}) do
+    case Connection.post(conn, path_for(:create), [], body) do
       {:ok, json} ->
         {:ok, new(json, conn)}
 
@@ -30,35 +30,33 @@ defmodule DockerAPI.Config do
     end
   end
 
-  def create!(conn = %Connection{}, body \\ %{}) when is_map(body) do
-    Connection.post!(conn, path_for("create"), [], body)
+  def create!(conn, body \\ %{}) do
+    Connection.post!(conn, path_for(:create), [], body)
     |> new(conn)
   end
 
-  def inspect(config = %Config{}) do
+  def inspect(config) do
     Connection.get(config.connection, path_for(config))
   end
 
-  def inspect!(config = %Config{}) do
+  def inspect!(config) do
     Connection.get!(config.connection, path_for(config))
   end
 
-  def delete(config = %Config{}) do
+  def delete(config) do
     Connection.delete(config.connection, path_for(config))
   end
 
-  def delete!(config = %Config{}) do
+  def delete!(config) do
     Connection.delete!(config.connection, path_for(config))
   end
 
-  def update(config = %Config{}, params \\ [], body \\ %{})
-      when is_list(params) and is_map(body) do
-    Connection.post(config.connection, path_for(config, "update"), params, body)
+  def update(config, params \\ [], body \\ %{}) do
+    Connection.post(config.connection, path_for(config, :update), params, body)
   end
 
-  def update!(config = %Config{}, params \\ [], body \\ %{})
-      when is_list(params) and is_map(body) do
-    Connection.post!(config.connection, path_for(config, "update"), params, body)
+  def update!(config, params \\ [], body \\ %{}) do
+    Connection.post!(config.connection, path_for(config, :update), params, body)
   end
 
   defp new(json, conn) do
@@ -72,15 +70,15 @@ defmodule DockerAPI.Config do
     "/configs"
   end
 
-  defp path_for(path) when is_binary(path) do
+  defp path_for(path) when is_atom(path) do
     "/configs/#{path}"
   end
 
-  defp path_for(config = %Config{}) do
+  defp path_for(config) do
     "/configs/#{config.id}"
   end
 
-  defp path_for(config = %Config{}, path) do
+  defp path_for(config, path) do
     "/configs/#{config.id}/#{path}"
   end
 end

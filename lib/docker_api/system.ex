@@ -3,7 +3,7 @@ defmodule DockerAPI.System do
 
   alias DockerAPI.Connection
 
-  def auth(conn = %Connection{}, body \\ %{}) when is_map(body) do
+  def auth(conn, body \\ %{}) do
     case Connection.post(conn, "/auth", [], body) do
       {:ok, ""} ->
         {:ok, conn}
@@ -16,7 +16,7 @@ defmodule DockerAPI.System do
     end
   end
 
-  def auth!(conn = %Connection{}, body \\ %{}) when is_map(body) do
+  def auth!(conn, body \\ %{}) do
     case Connection.post!(conn, "/auth", [], body) do
       "" ->
         conn
@@ -26,47 +26,47 @@ defmodule DockerAPI.System do
     end
   end
 
-  def info(conn = %Connection{}) do
+  def info(conn) do
     Connection.get(conn, "/info")
   end
 
-  def info!(conn = %Connection{}) do
+  def info!(conn) do
     Connection.get!(conn, "/info")
   end
 
-  def version(conn = %Connection{}) do
+  def version(conn) do
     Connection.get(conn, "/version")
   end
 
-  def version!(conn = %Connection{}) do
+  def version!(conn) do
     Connection.get!(conn, "/version")
   end
 
-  def ping_get(conn = %Connection{}) do
+  def ping_get(conn) do
     Connection.get(conn, "_ping")
   end
 
-  def ping_get!(conn = %Connection{}) do
+  def ping_get!(conn) do
     Connection.get!(conn, "_ping")
   end
 
-  def ping_head(conn = %Connection{}) do
+  def ping_head(conn) do
     Connection.head(conn, "_ping")
   end
 
-  def ping_head!(conn = %Connection{}) do
+  def ping_head!(conn) do
     Connection.head!(conn, "_ping")
   end
 
-  def events(_conn = %Connection{}) do
+  def events(_conn) do
     :none
   end
 
-  def data_usage(conn = %Connection{}) do
+  def data_usage(conn) do
     Connection.get(conn, "/system/df")
   end
 
-  def data_usage!(conn = %Connection{}) do
+  def data_usage!(conn) do
     Connection.get!(conn, "/system/df")
   end
 end

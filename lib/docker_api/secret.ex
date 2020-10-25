@@ -5,7 +5,7 @@ defmodule DockerAPI.Secret do
 
   defstruct id: nil, connection: nil
 
-  def list(conn = %Connection{}, params \\ []) when is_list(params) do
+  def list(conn, params \\ []) do
     case Connection.get(conn, path_for(), params) do
       {:ok, json} ->
         {:ok, Enum.map(json, &new(&1, conn))}
@@ -15,13 +15,13 @@ defmodule DockerAPI.Secret do
     end
   end
 
-  def list!(conn = %Connection{}, params \\ []) when is_list(params) do
+  def list!(conn, params \\ []) do
     Connection.get(conn, path_for(), params)
     |> Enum.map(&new(&1, conn))
   end
 
-  def create(conn = %Connection{}, body \\ %{}) when is_map(body) do
-    case Connection.post(conn, path_for("create"), [], body) do
+  def create(conn, body \\ %{}) do
+    case Connection.post(conn, path_for(:create), [], body) do
       {:ok, json} ->
         {:ok, new(json, conn)}
 
@@ -30,34 +30,34 @@ defmodule DockerAPI.Secret do
     end
   end
 
-  def create!(conn = %Connection{}, body \\ %{}) when is_map(body) do
-    Connection.post!(conn, path_for("create"), [], body)
+  def create!(conn, body \\ %{}) do
+    Connection.post!(conn, path_for(:create), [], body)
     |> new(conn)
   end
 
-  def inspect(secret = %Secret{}) do
+  def inspect(secret) do
     Connection.get(secret.connection, path_for(secret))
   end
 
-  def inspect!(secret = %Secret{}) do
+  def inspect!(secret) do
     Connection.get!(secret.connection, path_for(secret))
   end
 
-  def delete(secret = %Secret{}) do
+  def delete(secret) do
     Connection.delete(secret.connection, path_for(secret))
   end
 
-  def delete!(secret = %Secret{}) do
+  def delete!(secret) do
     Connection.delete!(secret.connection, path_for(secret))
   end
 
-  def update(secret = %Secret{}, params \\ [], body \\ %{})
+  def update(secret, params \\ [], body \\ %{})
       when is_list(params) and is_map(body) do
-    Connection.post(secret.connection, path_for(secret, "update"), params, body)
+    Connection.post(secret.connection, path_for(secret, :update), params, body)
   end
 
-  def update!(secret = %Secret{}, params \\ [], body \\ %{}) do
-    Connection.post!(secret.connection, path_for(secret, "update"), params, body)
+  def update!(secret, params \\ [], body \\ %{}) do
+    Connection.post!(secret.connection, path_for(secret, :update), params, body)
   end
 
   defp new(json, conn) do
@@ -71,7 +71,7 @@ defmodule DockerAPI.Secret do
     "/secrets"
   end
 
-  defp path_for(path) when is_binary(path) do
+  defp path_for(path) when is_atom(path) do
     "/secrets/#{path}"
   end
 

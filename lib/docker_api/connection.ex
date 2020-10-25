@@ -10,63 +10,86 @@ defmodule DockerAPI.Connection do
     %Connection{url: url, headers: headers, options: options}
   end
 
-  def get(conn = %Connection{}, path, params \\ []) do
-    url = build_url(conn, path)
-
-    HTTPoison.get(url, conn.headers, Keyword.merge(conn.options, params: params))
+  def get(conn, path, params \\ []) do
+    build_url(conn, path)
+    |> HTTPoison.get(conn.headers, Keyword.merge(conn.options, params: params))
     |> handle_response()
   end
 
-  def get!(conn = %Connection{}, path, params \\ []) do
-    get(conn, path, params)
+  def get!(conn, path, params \\ []) do
+    Connection.get(conn, path, params)
     |> handle_response!()
   end
 
-  def head(conn = %Connection{}, path, params \\ []) do
-    url = build_url(conn, path)
-
-    HTTPoison.head(url, conn.headers, Keyword.merge(conn.options, params: params))
+  def head(conn, path, params \\ []) do
+    build_url(conn, path)
+    |> HTTPoison.head(conn.headers, Keyword.merge(conn.options, params: params))
     |> handle_response()
   end
 
-  def head!(conn = %Connection{}, path, params \\ []) do
-    head(conn, path, params)
+  def head!(conn, path, params \\ []) do
+    Connection.head(conn, path, params)
     |> handle_response!
   end
 
-  def post(conn = %Connection{}, path, params \\ [], body \\ "") do
-    url = build_url(conn, path)
+  def post(conn, path, params \\ []) do
+    Connection.post(conn, path, params, "")
+  end
 
-    HTTPoison.post(url, body, conn.headers, Keyword.merge(conn.options, params: params))
+  def post(conn, path, params, body) when is_map(body) do
+    case Jason.encode(body) do
+      {:ok, body} ->
+        Connection.post(conn, path, params, body)
+
+      {:error, error = %Jason.EncodeError{}} ->
+        %Error{message: error.message}
+    end
+  end
+
+  def post(conn, path, params, body) do
+    build_url(conn, path)
+    |> HTTPoison.post(body, conn.headers, Keyword.merge(conn.options, params: params))
     |> handle_response()
   end
 
-  def post!(conn = %Connection{}, path, params \\ [], body \\ "") do
-    post(conn, path, params, body)
+  def post!(conn, path, params \\ []) do
+    Connection.post!(conn, path, params, "")
+  end
+
+  def post!(conn, path, params, body) when is_map(body) do
+    case Jason.encode(body) do
+      {:ok, body} ->
+        Connection.post!(conn, path, params, body)
+
+      {:error, error = %Jason.EncodeError{}} ->
+        %Error{message: error.message}
+    end
+  end
+
+  def post!(conn, path, params, body) do
+    Connection.post(conn, path, params, body)
     |> handle_response!()
   end
 
-  def put(conn = %Connection{}, path, params \\ [], body \\ "") do
-    url = build_url(conn, path)
-
-    HTTPoison.put(url, body, conn.headers, Keyword.merge(conn.options, params: params))
+  def put(conn, path, params \\ [], body \\ "") do
+    build_url(conn, path)
+    |> HTTPoison.put(body, conn.headers, Keyword.merge(conn.options, params: params))
     |> handle_response()
   end
 
-  def put!(conn = %Connection{}, path, params \\ [], body \\ "") do
-    put(conn, path, params, body)
+  def put!(conn, path, params \\ [], body \\ "") do
+    Connection.put(conn, path, params, body)
     |> handle_response!()
   end
 
-  def delete(conn = %Connection{}, path, params \\ []) do
-    url = build_url(conn, path)
-
-    HTTPoison.delete(url, conn.headers, Keyword.merge(conn.options, params: params))
+  def delete(conn, path, params \\ []) do
+    build_url(conn, path)
+    |> HTTPoison.delete(conn.headers, Keyword.merge(conn.options, params: params))
     |> handle_response()
   end
 
-  def delete!(conn = %Connection{}, path, params \\ []) do
-    delete(conn, path, params)
+  def delete!(conn, path, params \\ []) do
+    Connection.delete(conn, path, params)
     |> handle_response!()
   end
 
@@ -101,10 +124,10 @@ defmodule DockerAPI.Connection do
 
       {:ok, %HTTPoison.Response{status_code: _, body: body}} ->
         json = Jason.decode!(body)
-        {:error, %Error{reason: json["message"]}}
+        {:error, %Error{message: json["message"]}}
 
       {:error, %HTTPoison.Error{reason: reason}} ->
-        {:error, %Error{reason: reason}}
+        {:error, %Error{message: reason}}
     end
   end
 

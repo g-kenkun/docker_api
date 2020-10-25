@@ -3,69 +3,67 @@ defmodule DockerAPI.Swarm do
 
   alias DockerAPI.Connection
 
-  def inspect(conn = %Connection{}) do
+  def inspect(conn) do
     Connection.get(conn, path_for())
   end
 
-  def inspect!(conn = %Connection{}) do
+  def inspect!(conn) do
     Connection.get!(conn, path_for())
   end
 
-  def initialize(conn = %Connection{}, body \\ %{}) when is_map(body) do
-    Connection.post(conn, path_for("init"), [], body)
+  def initialize(conn, body \\ %{}) do
+    Connection.post(conn, path_for(:init), [], body)
   end
 
-  def initialize!(conn = %Connection{}, body \\ %{}) when is_map(body) do
-    Connection.post!(conn, path_for("init"), [], body)
+  def initialize!(conn, body \\ %{}) do
+    Connection.post!(conn, path_for(:init), [], body)
   end
 
-  def join(conn = %Connection{}, body \\ %{}) when is_map(body) do
-    Connection.post(conn, path_for("join"), [], body)
+  def join(conn, body \\ %{}) do
+    Connection.post(conn, path_for(:join), [], body)
   end
 
-  def join!(conn = %Connection{}, body \\ %{}) when is_map(body) do
-    Connection.post!(conn, path_for("join"), [], body)
+  def join!(conn, body \\ %{}) do
+    Connection.post!(conn, path_for(:join), [], body)
   end
 
-  def leave(conn = %Connection{}, params \\ []) do
-    Connection.get(conn, path_for("leave"), params)
+  def leave(conn, params \\ []) do
+    Connection.get(conn, path_for(:leave), params)
   end
 
-  def leave!(conn = %Connection{}, params \\ []) do
-    Connection.get!(conn, path_for("leave"), params)
+  def leave!(conn, params \\ []) do
+    Connection.get!(conn, path_for(:leave), params)
   end
 
-  def update(conn = %Connection{}, params \\ [], body \\ %{})
-      when is_list(params) and is_map(body) do
-    Connection.post(conn, path_for("update"), params, body)
+  def update(conn, params \\ [], body \\ %{}) do
+    Connection.post(conn, path_for(:update), params, body)
   end
 
-  def update!(conn = %Connection{}, params \\ [], body \\ %{})
-      when is_list(params) and is_map(body) do
-    Connection.post!(conn, path_for("update"), params, body)
+  def update!(conn, params \\ [], body \\ %{}) do
+    Connection.post!(conn, path_for(:update), params, body)
   end
 
-  def unlock_key(conn = %Connection{}) do
-    Connection.get(conn, path_for("unlockkey"))
+  def unlock_key(conn) do
+    Connection.get(conn, path_for(:unlockkey))
   end
 
-  def unlock_key!(conn = %Connection{}) do
-    Connection.get!(conn, path_for("unlockkey"))
+  def unlock_key!(conn) do
+    Connection.get!(conn, path_for(:unlockkey))
   end
 
-  def unlock(conn = %Connection{}, body \\ %{}) when is_map(body) do
-    Connection.post(conn, path_for("unlock"), [], body)
+  def unlock(conn, body \\ %{}) do
+    Connection.post(conn, path_for(:unlock), [], body)
   end
 
-  def unlock!(conn = %Connection{}, body \\ %{}) when is_map(body) do
-    Connection.post!(conn, path_for("unlock"), [], body)
+  def unlock!(conn, body \\ %{}) do
+    Connection.post!(conn, path_for(:unlock), [], body)
   end
 
   defp path_for do
     "/swarm"
   end
 
-  defp path_for(path) when is_binary(path) do
+  defp path_for(path) do
     "/swarm/#{path}"
   end
 end
