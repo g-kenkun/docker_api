@@ -3,11 +3,10 @@ defmodule DockerAPI.Connection do
 
   alias DockerAPI.{Connection, Error}
 
-  defstruct url: nil, headers: [], options: [], identity_token: nil
+  defstruct url: nil, headers: [], options: [], version: nil, identity_token: nil
 
-  def new(url \\ "http+unix://%2Fvar%2Frun%2Fdocker.sock", headers \\ [], options \\ [])
-      when is_binary(url) and is_list(headers) and is_list(options) do
-    %Connection{url: url, headers: headers, options: options}
+  def new(url \\ "http+unix://%2Fvar%2Frun%2Fdocker.sock", headers \\ [], options \\ [], version \\ nil) do
+    %Connection{url: url, headers: headers, options: options, version: version}
   end
 
   def get(conn, path, params \\ []) do
@@ -93,8 +92,12 @@ defmodule DockerAPI.Connection do
     |> handle_response!()
   end
 
-  defp build_url(conn, path) do
+  defp build_url(%Connection{version: nil} = conn, path) do
     conn.url <> path
+  end
+
+  defp build_url(conn, path) do
+    conn.url <> "/" <> conn.version <> path
   end
 
   defp handle_response(resp_tuple) do
