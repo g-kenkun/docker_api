@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="earmark_parser" type="mix">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/deps/earmark_parser/lib" />
+      <root url="file://$PROJECT_DIR$/deps/earmark_parser/src" />
+    </SOURCES>
+  </library>
+</component>
