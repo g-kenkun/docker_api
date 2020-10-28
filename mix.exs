@@ -31,6 +31,7 @@ defmodule DockerAPI.MixProject do
 
   defp package do
     [
+      licence: ["MIT", "Apache-2.0"],
       links: %{"GitHub" => "https://github.com/g-kenkun/docker_api"}
     ]
   end
