@@ -1,5 +1,5 @@
 defmodule DockerAPI.Error do
   @moduledoc false
 
-  defexception [:message]
+  defexception [:message, :status_code]
 end
