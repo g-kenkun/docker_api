@@ -4,26 +4,49 @@ defmodule DockerAPI.MixProject do
   def project do
     [
       app: :docker_api,
-      version: "0.1.0",
+      version: "0.3.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      description: description(),
+      package: package(),
+      deps: deps(),
+      name: "DockerAPI",
+      source_url: "https://github.com/g-kenkun/docker_api",
+      homepage_url: "https://github.com/g-kenkun/docker_api",
+      docs: docs()
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger]
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
+  defp description do
+    """
+    Docker remote API wrapper. This library support Containers, Images, Network, Volumes, etc...
+    """
+  end
+
+  defp package do
+    [
+      links: %{"GitHub" => "https://github.com/g-kenkun/docker_api"}
+    ]
+  end
+
   defp deps do
     [
       {:httpoison, "~> 1.7"},
       {:jason, "~> 1.2"},
-      {:ex_doc, "~> 0.23.0"}
+      {:ex_doc, "~> 0.23.0", only: :dev, runtime: false}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      extras: ["README.md"]
     ]
   end
 end
