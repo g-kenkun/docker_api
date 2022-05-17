@@ -1,5 +1,4 @@
 defmodule DockerAPI.Error do
-  @moduledoc false
-
-  defexception [:message, :status_code]
+  @type t() :: %__MODULE__{message: String.t(), status_code: Mint.Types.status()}
+  defexception message: nil, status_code: nil
 end

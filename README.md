@@ -2,6 +2,18 @@
 
 Docker remote API wrapper. This library support Containers, Images, Network, Volumes, etc...
 
+## Warning!
+
+v0.3 -> v0.4 で破壊的変更があります。
+
+v0.3 -> v0.4 contains destructive changes.
+
+## Please Help Me!
+
+開発環境を WSL に移行して Docker API が利用できなくなったためドキュメントがありません！ どなたが v0.3 を参考にドキュメントを書いてください！
+
+Since we have migrated my development environment to WSL and the Docker API is not available, there is no documentation for each module! Please someone write documentation based on v0.3!
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
@@ -10,7 +22,7 @@ by adding `docker_api` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:docker_api, "~> 0.3.0"}
+    {:docker_api, "~> 0.4.0"}
   ]
 end
 ```
@@ -37,35 +49,12 @@ iex> DockerAPI.Connection.new() |> DockerAPI.Container.create!([name: "sample"],
  }}
 ```
 
-### Options
-
-This library uses the `HTTPoison` (to support the Unix domain docket).
-
-So you can use the same options as HTTPoison (and hackney by extension).
-
-```elixir
-DockerAPI.Connection.new(url, headers, options)  
-```
-
-For example, a simple one is to set up a timeout
-
-```elixir
-DockerAPI.Connection.new("http+unix://%2Fvar%2Frun%2Fdocker.sock", [], [recv_timeout: :inifinity])
-
-```
-
-And then there's the SSL settings.
-
-```elixir
-DockerAPI.Connection.new("http+unix://%2Fvar%2Frun%2Fdocker.sock", [], [ssl: [certfile: "certs/client.crt"]]) 
-```
-
 ## Contribute
 
-There are some unimplemented functions in this library and examples are missing in some modules.
+本ライブラリには未実装の関数があり、モジュールによってはサンプルが不足しています。
 
-Also, there are some functions that I have not been able to verify the behavior of. So if you find a bug, please feel free to contribute.
+また、私が動作を確認できていない関数もあります。もしバグを見つけたら教えてください。
 
-I don't know much about licensing, so please help me out!
+There are some functions in this library that are not yet implemented, and some modules lack samples.
 
-Thank you.
+Also, some functions I have not been able to verify their operation. If you find any bugs, please let me know.

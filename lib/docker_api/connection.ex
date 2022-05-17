@@ -1,200 +1,197 @@
 defmodule DockerAPI.Connection do
-  @moduledoc false
-
   alias DockerAPI.{Connection, Error}
 
-  defstruct url: nil, headers: [], options: [], version: nil, identity_token: nil
+  defstruct endpoint: "http://localhost",
+            unix_socket: "/var/run/docker.sock",
+            identity_token: nil
 
-  defguard is_success_status_code(status_code) when 200 <= status_code and status_code < 300
-  defguard is_redirect_status_code(status_code) when 300 <= status_code and status_code < 400
-  defguard is_client_error_status_code(status_code) when 400 <= status_code and status_code < 500
-  defguard is_server_error_status_code(status_code) when 500 <= status_code and status_code < 600
+  @type endpoint() :: String.t()
 
-  defguard is_no_problem_status_code(status_code)
-           when is_success_status_code(status_code) or is_redirect_status_code(status_code)
+  @type unix_socket() :: String.t()
 
-  defguard is_error_status_code(status_code)
-           when is_client_error_status_code(status_code) or
-                  is_server_error_status_code(status_code)
+  @type identity_token() :: String.t()
 
+  @type t() :: %__MODULE__{
+          endpoint: endpoint(),
+          unix_socket: unix_socket() | nil,
+          identity_token: identity_token() | nil
+        }
+
+  @type path() :: String.t()
+
+  @type params() :: map() | list() | String.t()
+
+  @type headers() :: [{header_name :: String.t(), header_value :: String.t()}, ...]
+
+  @type body() :: map() | list() | String.t() | nil
+
+  @spec new(
+          endpoint :: endpoint(),
+          unix_socket :: unix_socket(),
+          identity_token :: identity_token()
+        ) :: t()
   def new(
-        url \\ "http+unix://%2Fvar%2Frun%2Fdocker.sock",
-        headers \\ [],
-        options \\ [],
-        version \\ nil
+        endpoint \\ "http://localhost/",
+        unix_socket \\ "/var/run/docker.sock",
+        identity_token \\ nil
       ) do
-    %Connection{url: url, headers: headers, options: options, version: version}
-  end
-
-  def get(conn, path, params \\ []) do
-    build_url(conn, path)
-    |> HTTPoison.get(conn.headers, Keyword.merge(conn.options, params: params))
-    |> handle_response()
-  end
-
-  def get!(conn, path, params \\ []) do
-    Connection.get(conn, path, params)
-    |> handle_response!()
-  end
-
-  def head(conn, path, params \\ []) do
-    build_url(conn, path)
-    |> HTTPoison.head(conn.headers, Keyword.merge(conn.options, params: params))
-    |> handle_response()
-  end
-
-  def head!(conn, path, params \\ []) do
-    Connection.head(conn, path, params)
-    |> handle_response!
-  end
-
-  def post(conn, path, params \\ []) do
-    Connection.post(conn, path, params, "")
-  end
-
-  def post(conn, path, params, body) when is_map(body) do
-    case Jason.encode(body) do
-      {:ok, body} ->
-        conn
-        |> add_header(:"Content-Type", "application/json")
-        |> Connection.post(path, params, body)
-
-      {:error, error = %Jason.EncodeError{}} ->
-        %Error{message: error.message}
-    end
-  end
-
-  def post(conn, path, params, body) do
-    build_url(conn, path)
-    |> HTTPoison.post(body, conn.headers, Keyword.merge(conn.options, params: params))
-    |> handle_response()
-  end
-
-  def post!(conn, path, params \\ []) do
-    Connection.post!(conn, path, params, "")
-  end
-
-  def post!(conn, path, params, body) when is_map(body) do
-    case Jason.encode(body) do
-      {:ok, body} ->
-        conn
-        |> add_header(:"Content-Type", "application/json")
-        |> Connection.post!(path, params, body)
-
-      {:error, error = %Jason.EncodeError{}} ->
-        %Error{message: error.message}
-    end
-  end
-
-  def post!(conn, path, params, body) do
-    Connection.post(conn, path, params, body)
-    |> handle_response!()
-  end
-
-  def put(conn, path, params \\ [], body \\ "") do
-    build_url(conn, path)
-    |> HTTPoison.put(body, conn.headers, Keyword.merge(conn.options, params: params))
-    |> handle_response()
-  end
-
-  def put!(conn, path, params \\ [], body \\ "") do
-    Connection.put(conn, path, params, body)
-    |> handle_response!()
-  end
-
-  def delete(conn, path, params \\ []) do
-    build_url(conn, path)
-    |> HTTPoison.delete(conn.headers, Keyword.merge(conn.options, params: params))
-    |> handle_response()
-  end
-
-  def delete!(conn, path, params \\ []) do
-    Connection.delete(conn, path, params)
-    |> handle_response!()
-  end
-
-  def add_header(conn, key, value) do
     %Connection{
-      conn
-    | headers: Keyword.put(conn.headers, key, value)
+      endpoint: endpoint,
+      unix_socket: unix_socket,
+      identity_token: identity_token
     }
   end
 
-  defp build_url(%Connection{version: nil} = conn, path) do
-    conn.url <> path
+  @spec get(conn :: t(), path :: path(), params :: params(), headers :: headers()) ::
+          {:ok, binary()} | {:error, Exception.t()}
+  def get(conn, path, params, headers) do
+    build_request(:get, conn, path, params, headers)
+    |> Finch.request(DockerAPI.Finch)
+    |> handle_get_response()
   end
 
-  defp build_url(conn, path) do
-    conn.url <> "/" <> conn.version <> path
+  @spec head(conn :: t(), path :: path(), params :: params(), headers :: headers()) ::
+          {:ok, headers()} | {:error, Exception.t()}
+  def head(conn, path, params, headers) do
+    build_request(:head, conn, path, params, headers)
+    |> Finch.request(DockerAPI.Finch)
+    |> handle_head_response()
   end
 
-  defp handle_response(resp_tuple) do
-    case resp_tuple do
-      {:ok, resp} ->
-        case resp do
-          %HTTPoison.Response{
-            status_code: status_code,
-            request: %HTTPoison.Request{method: method}
-          }
-          when is_no_problem_status_code(status_code) and method in [:get, :post, :delete, :put] ->
-            case resp.body do
-              "" ->
-                :ok
-
-              body ->
-                case Jason.decode(body) do
-                  {:ok, json} ->
-                    {:ok, json}
-
-                  {:error, _} ->
-                    {:ok, body}
-                end
-            end
-
-          %HTTPoison.Response{
-            status_code: status_code,
-            request: %HTTPoison.Request{method: :head}
-          }
-          when is_no_problem_status_code(status_code) ->
-            {:ok, resp.headers}
-
-          %HTTPoison.Response{
-            status_code: status_code
-          }
-          when is_error_status_code(status_code) ->
-            case resp.body do
-              "" ->
-                {:error, %Error{status_code: status_code}}
-
-              body ->
-                case Jason.decode(body) do
-                  {:ok, json} ->
-                    {:error, %Error{status_code: status_code, message: json["message"]}}
-
-                  {:error, _} ->
-                    {:error, %Error{status_code: status_code, message: body}}
-                end
-            end
-        end
-
-      {:error, error} ->
-        case error do
-          error when is_struct(error, HTTPoison.Error) ->
-            {:error, %Error{message: error.reason}}
-        end
-    end
+  @spec post(
+          conn :: t(),
+          path :: path(),
+          params :: params(),
+          body :: body(),
+          headers :: headers()
+        ) ::
+          {:ok, binary()} | {:error, Exception.t()}
+  def post(conn, path, params, body, headers) do
+    build_request(:post, conn, path, params, headers, body)
+    |> Finch.request(DockerAPI.Finch)
+    |> handle_post_response()
   end
 
-  defp handle_response!(resp_tuple) do
-    case resp_tuple do
-      :ok ->
-        :ok
+  @spec put(
+          conn :: t(),
+          path :: path(),
+          params :: params(),
+          body :: body(),
+          headers :: headers()
+        ) ::
+          {:ok, binary()} | {:error, Exception.t()}
+  def put(conn, path, params, body, headers) do
+    build_request(:put, conn, path, params, headers, body)
+    |> Finch.request(DockerAPI.Finch)
+    |> handle_put_response()
+  end
 
-      {:ok, resp} ->
-        resp
+  @spec delete(
+          conn :: t(),
+          path :: path(),
+          params :: params(),
+          headers :: headers()
+        ) ::
+          {:ok, binary()} | {:error, Exception.t()}
+  def delete(conn, path, params, headers) do
+    build_request(:delete, conn, path, params, headers)
+    |> Finch.request(DockerAPI.Finch)
+    |> handle_delete_response()
+  end
 
-      {:error, error} ->
-        raise(Error, error.message)
-    end
+  @spec build_request(
+          method :: Finch.Request.method(),
+          conn :: t(),
+          path :: path(),
+          params :: params(),
+          headers :: headers(),
+          body :: body()
+        ) :: Finch.Request.t()
+  def build_request(method, conn, path, params, headers, body \\ nil)
+
+  def build_request(method, conn, path, params, headers, body) when is_map(body) or is_list(body),
+    do: build_request(method, conn, path, params, headers, Jason.encode!(body))
+
+  def build_request(method, conn, path, params, headers, body) do
+    query_string = URI.encode_query(params, :rfc3986)
+    url = URI.parse(conn.endpoint) |> URI.merge(%URI{path: path, query: query_string})
+
+    opts = if conn.unix_socket, do: [socket_path: conn.unix_socket], else: []
+
+    Finch.build(method, url, headers, body, opts)
+  end
+
+  defp handle_get_response({:ok, %Finch.Response{body: body, status: status}})
+       when status in 200..399 do
+    body
+  end
+
+  defp handle_get_response({:ok, _} = res) do
+    handle_bad_response(res)
+  end
+
+  defp handle_get_response({:error, _} = res) do
+    handle_bad_response(res)
+  end
+
+  defp handle_head_response({:ok, %Finch.Response{headers: headers, status: status}})
+       when status in 200..399 do
+    headers
+  end
+
+  defp handle_head_response({:ok, _} = res) do
+    handle_bad_response(res)
+  end
+
+  defp handle_head_response({:error, _} = res) do
+    handle_bad_response(res)
+  end
+
+  defp handle_post_response({:ok, %Finch.Response{body: body, status: status}})
+       when status in 200..399 do
+    body
+  end
+
+  defp handle_post_response({:ok, _} = res) do
+    handle_bad_response(res)
+  end
+
+  defp handle_post_response({:error, _} = res) do
+    handle_bad_response(res)
+  end
+
+  defp handle_put_response({:ok, %Finch.Response{body: body, status: status}})
+       when status in 200..399 do
+    body
+  end
+
+  defp handle_put_response({:ok, _} = res) do
+    handle_bad_response(res)
+  end
+
+  defp handle_put_response({:error, _} = res) do
+    handle_bad_response(res)
+  end
+
+  defp handle_delete_response({:ok, %Finch.Response{body: body, status: status}})
+       when status in 200..399 do
+    body
+  end
+
+  defp handle_delete_response({:ok, _} = res) do
+    handle_bad_response(res)
+  end
+
+  defp handle_delete_response({:error, _} = res) do
+    handle_bad_response(res)
+  end
+
+  defp handle_bad_response({:ok, %Finch.Response{body: body, status: status}}) do
+    json = Jason.decode!(body)
+    {:error, %Error{status_code: status, message: json["message"]}}
+  end
+
+  defp handle_bad_response({:error, exception}) do
+    {:error, %Error{message: Exception.message(exception)}}
   end
 end

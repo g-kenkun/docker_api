@@ -4,7 +4,7 @@ defmodule DockerAPI.MixProject do
   def project do
     [
       app: :docker_api,
-      version: "0.3.0",
+      version: "0.4.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       description: description(),
@@ -31,16 +31,17 @@ defmodule DockerAPI.MixProject do
 
   defp package do
     [
-      licenses: ["MIT", "Apache-2.0"],
+      licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/g-kenkun/docker_api"}
     ]
   end
 
   defp deps do
     [
-      {:httpoison, "~> 1.7"},
-      {:jason, "~> 1.2"},
-      {:ex_doc, "~> 0.23.0", only: :dev, runtime: false}
+      {:finch, "~> 0.12.0"},
+      {:jason, "~> 1.3"},
+      {:ex_doc, "~> 0.28.4", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
     ]
   end
 
